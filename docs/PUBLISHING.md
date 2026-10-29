@@ -16,7 +16,7 @@ python3 scripts/package.py --arch amd64 --version v2.0.0
 
 原生 ARM64 上运行同样命令，将 `--arch` 改为 `arm64`，并给集成脚本加
 `--library build/linux/arm64/egress-timezone.so`。
-也可以按 README 使用目标 C 编译器交叉构建。
+也可以按[安装指南](INSTALLATION.md#从源码构建)使用目标 C 编译器交叉构建。
 
 输出约定：
 

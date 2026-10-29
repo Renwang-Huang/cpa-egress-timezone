@@ -37,6 +37,8 @@ def main():
         files.append((ROOT / name, name))
     for document in sorted((ROOT / "docs").glob("*.md")):
         files.append((document, "docs/" + document.name))
+    for asset in sorted((ROOT / "assets").glob("*.svg")):
+        files.append((asset, "assets/" + asset.name))
     files.append((ROOT / "examples/plugin-config.yaml", "examples/plugin-config.yaml"))
     goroot = Path(go_output("env", "GOROOT"))
     files.append((goroot / "LICENSE", "licenses/Go-LICENSE"))

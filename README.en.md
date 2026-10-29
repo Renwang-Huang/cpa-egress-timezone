@@ -1,99 +1,133 @@
-# CPA Egress Timezone
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg">
+  <img alt="CPA Egress Timezone — A timezone that follows your route." src="assets/hero-light.svg" width="100%">
+</picture>
 
-Adapt supported Codex / OpenAI client timezone declarations to the IANA timezone
-of the selected CPA credential's observed egress IP.
+<div align="center">
 
-[中文说明](README.md) · [Configuration](examples/plugin-config.yaml) ·
-[Design and limits](docs/DESIGN.md) · [Publishing](docs/PUBLISHING.md)
+# A timezone that follows your route.
 
-Plugin ID: `egress-timezone`. Version: `2.0.0`. License: MIT.
-Compatibility baseline: CPA `v8.0.47`, C ABI v1, plugin schema v2, with CGO
-dynamic plugins enabled. Linux amd64 and arm64 glibc are release targets.
+Adapt Codex / OpenAI timezone declarations to the **observed egress IP** of the account selected by CPA.
+
+[![Release](https://img.shields.io/github/v/release/Renwang-Huang/cpa-egress-timezone?style=flat-square&color=0e8a78&label=release)](https://github.com/Renwang-Huang/cpa-egress-timezone/releases/latest) [![Verify](https://img.shields.io/github/actions/workflow/status/Renwang-Huang/cpa-egress-timezone/ci.yml?branch=main&style=flat-square&label=verify)](https://github.com/Renwang-Huang/cpa-egress-timezone/actions/workflows/ci.yml) [![Platform](https://img.shields.io/badge/Linux-amd64%20%7C%20arm64-52637b?style=flat-square)](docs/INSTALLATION.en.md#compatibility) [![License: MIT](https://img.shields.io/badge/license-MIT-52637b?style=flat-square)](LICENSE)
+
+[简体中文](README.md) · **English**
+
+[Quick start](#quick-start) · [Config](docs/CONFIGURATION.en.md) · [Design](docs/DESIGN.md) · [Releases](https://github.com/Renwang-Huang/cpa-egress-timezone/releases/latest)
+
+</div>
+
+---
+
+## Every account. Its own timezone.
+
+When CPA routes accounts through different proxies, a client's declared timezone can differ from its exit location. Egress Timezone resolves the selected account's route, probes the public IP observed by its upstream, and aligns supported environment declarations with that IP's IANA timezone.
+
+- **Follow the account** — Resolve the selected credential's proxy and origin; cache observations by route.
+- **Refresh on demand** — Route observations last 60 seconds by default; the next request refreshes an expired entry.
+- **Preserve meaning** — Rewrite supported timezone declarations; preserve the request on lookup failure by default.
+
+## Quick start
+
+Requires **CPA v8.0.47** as the compatibility baseline, with dynamic plugins enabled, on **Linux amd64 / arm64 · glibc**. [Other installation methods →](docs/INSTALLATION.en.md)
+
+### 1. Add the store source
+
+Merge these fields into your existing CPA configuration, preserving other sources and settings:
+
+```yaml
+plugins:
+  enabled: true
+  store-sources:
+    - https://raw.githubusercontent.com/Renwang-Huang/cpa-egress-timezone/main/store/registry.json
+```
+
+### 2. Install and enable
+
+Open **Plugins → Store** in CPA's management UI, refresh, and install **Egress Timezone**. Merge these settings into the same `plugins` section:
+
+```yaml
+plugins:
+  configs:
+    egress-timezone:
+      enabled: true
+      priority: 1000
+      mode: auto
+      cpa_config_path: /CLIProxyAPI/config.yaml
+```
+
+Use the actual path **inside CPA's runtime or container**. The plugin needs to read the configuration and, for file-backed OAuth accounts, the selected credential JSON. Disable the older `los-angeles-timezone` plugin using the [migration guide](docs/INSTALLATION.en.md#migrate-from-the-older-plugin).
+
+### 3. Inspect an observation
+
+After sending a normal request, query the authenticated status endpoint:
+
+```bash
+curl --fail --silent --show-error \
+  -H "Authorization: Bearer $CPA_MANAGEMENT_KEY" \
+  http://127.0.0.1:8317/v0/management/plugins/egress-timezone/status
+```
+
+Check `ip`, `timezone`, `expires_at`, and `last_error` in `observations`. Use your own deployment address and management key. [Configuration & troubleshooting →](docs/CONFIGURATION.en.md)
+
+## What changes
+
+If the selected account's upstream probe IP maps to `America/Los_Angeles`, the request's environment block is adjusted like this:
+
+```diff
+ <environment_context>
+-  <timezone>Asia/Hong_Kong</timezone>
++  <timezone>America/Los_Angeles</timezone>
+ </environment_context>
+```
+
+| Content | Behavior |
+| :--- | :--- |
+| Environment `<timezone>` tags and supported explicit timezone fields | Align with the observed IP's IANA timezone |
+| `<current_date>` in the latest environment block | Convert only when it is today in the original timezone and that timezone is unambiguous |
+| Existing explicit timezone headers | Adjust in the after-auth hook; no new timezone headers are added |
+| Ordinary text, tool arguments/results, encrypted reasoning, assistant history, historical dates | Preserve |
+| `User-Agent`, `Originator`, `Authorization`, account and route settings | Preserve |
+
+Embedded IANA tzdata handles daylight saving and date boundaries without changing the host or container timezone.
 
 ## How it works
 
-The after-auth hook receives `selected_auth_id`. The plugin reads the local CPA
-configuration and, for file-backed Codex accounts, the selected auth file to
-recover the upstream origin and credential proxy. Both legacy and grouped v8
-configuration layouts are supported.
+1. **Select the route** — Read `selected_auth_id` in the after-auth hook and resolve the account's proxy and upstream origin.
+2. **Observe the exit** — Request the upstream's `/cdn-cgi/trace` through that route and read the returned public IP.
+3. **Resolve the timezone** — Query GeoIP for that observed IP and cache the IP → IANA timezone mapping.
+4. **Align the request** — Rewrite supported declarations, refresh expired observations, and preserve the request on failure by default.
 
-It probes the upstream origin's `/cdn-cgi/trace` through that proxy, then asks a
-GeoIP endpoint for the timezone of the **observed public IP**. Route observations
-are short lived; IP-to-timezone mappings are cached separately. Expired route
-observations are never used to rewrite a request after a failed refresh.
+> [!IMPORTANT]
+> A probe uses a separate connection and cannot attest the exit of every model request. Automatic mode requires equivalent probe/model routing and an exit that stays stable within the cache window. Per-connection rotation, destination routing, request proxy overrides, or another forwarding gateway can produce different exits. See [design and accuracy limits](docs/DESIGN.md) (中文).
 
-The probe is a separate connection. Per-connection rotation, destination/path
-routing, SDK request proxy overrides, custom transports and another forwarding
-gateway can make the model request's actual exit differ. This plugin cannot
-attest the source IP of every model connection. Use automatic mode only when
-probe and model traffic share a stable route. See [limits](docs/DESIGN.md).
+The default GeoIP service receives only the observed public IP, without model bodies, account tokens, or client identity headers. You can configure a compatible service of your own. [Full configuration →](docs/CONFIGURATION.en.md)
 
-## Selective rewriting
+## Documentation & development
 
-- Rewrite timezone tags inside supported client environment blocks, explicit
-  client timezone fields and existing timezone headers.
-- Adjust only the latest unambiguous environment `current_date` when it equals
-  today in the original IANA timezone. Embedded tzdata handles DST.
-- Preserve ordinary text, tool arguments/results, encrypted reasoning, assistant
-  history, historical dates, numeric precision and unrelated identity headers.
-- Do not change host/container timezone, credentials, proxies or system routes.
-
-## Build and use
-
-Install Go (the toolchain is pinned in `go.mod`) and a C compiler:
+| Guide | Contents |
+| :--- | :--- |
+| [Installation & migration](docs/INSTALLATION.en.md) | Release packages, source builds, platform requirements, migration, rollback |
+| [Configuration](docs/CONFIGURATION.en.md) | Every option, fixed mode, diagnostics, troubleshooting |
+| [Example configuration](examples/plugin-config.yaml) | Complete settings to merge into an existing CPA configuration |
+| [Design](docs/DESIGN.md) (中文) | Route resolution, caching, rewrite scope, accuracy limits |
+| [Verification](docs/VERIFICATION.md) (中文) | Both architectures, isolated integration, live probes, known limits |
+| [Publishing](docs/PUBLISHING.md) (中文) | Releases, custom sources, official store submission |
 
 ```bash
 go test -race -count=1 ./...
 go vet ./...
 bash scripts/build.sh
-```
-
-Copy `build/linux/<arch>/egress-timezone.so` to CPA's plugin directory and merge
-[the example](examples/plugin-config.yaml) into its existing configuration.
-`cpa_config_path` must be readable inside CPA's runtime/container. Do not replace
-your full configuration with the example. Disable the older
-`los-angeles-timezone` plugin before enabling this one.
-
-Automatic mode defaults to a 60-second route observation, a six-hour GeoIP
-mapping cache and a four-second total lookup budget. On failure the original
-request is preserved. Set `fallback_timezone` only if you want an explicit fixed
-fallback. `mode: fixed` uses `fixed_timezone` and performs no network lookup.
-
-Default GeoIP: `https://ipwho.is/{ip}`. Public provider quotas and terms apply.
-Only the observed IP is sent; model bodies, provider credentials, cookies and
-identity headers are not forwarded. A compatible private service is supported.
-Custom upstreams without a trace endpoint need a configured, route-equivalent
-`probe_url`; otherwise auto mode leaves requests unchanged.
-
-## Verify and package
-
-```bash
 python3 scripts/integration.py
-python3 scripts/package.py --arch amd64
 ```
 
-Integration runs an isolated CPA container, mock upstream and two controlled
-proxies using fake credentials. It covers HTTP, streaming, Chat Completions,
-WebSocket, route isolation, exit changes, cache reuse, lookup failure and client
-identity preservation against a disabled-plugin baseline. Synthetic observations
-are not evidence of production egress. No real model API is invoked.
+Integration uses an isolated CPA container, mock upstream, and fake credentials. It covers HTTP, streaming, WebSocket, account routes, and failure handling without calling real model APIs. Synthetic results do not verify production egress. See [development verification](docs/INSTALLATION.en.md#development-verification) for opt-in live probes.
 
-An opt-in live probe is available with `CPA_EGRESS_LIVE_CONFIG` and
-`go test -run '^TestLiveProbeOptIn$' -v`. Run it in CPA's network and filesystem
-namespace. It requests trace/GeoIP only; normal CI skips it. See
-[verification evidence](docs/VERIFICATION.md), including a real timeout and its
-subsequent successful recheck.
+---
 
-Authenticated management diagnostics:
-`GET /v0/management/plugins/egress-timezone/status`.
-It includes observation timestamps, expiry, timezone, IP and sanitized failure
-reasons. Historical observations remain visible after a failure but are not
-used for expired-cache rewriting. Configuration reload clears the in-memory
-caches.
+<div align="center">
 
-Source: [Renwang-Huang/cpa-egress-timezone](https://github.com/Renwang-Huang/cpa-egress-timezone).
-Install a formal [GitHub Release](https://github.com/Renwang-Huang/cpa-egress-timezone/releases)
-or use the custom store source in the Chinese README. Official store listing
-depends on the upstream registry pull request being merged.
-See [publishing instructions](docs/PUBLISHING.md) and
-[third party notices](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE) · Created by [Renwang Huang](https://github.com/Renwang-Huang) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+</div>

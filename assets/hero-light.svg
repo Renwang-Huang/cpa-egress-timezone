@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="488" viewBox="0 0 1280 488" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">CPA Egress Timezone</title>
+  <desc id="desc">A timezone that follows your route. An illustrative route circles a globe and resolves to the IANA timezone America/Los_Angeles.</desc>
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" stroke="#e9eef4" stroke-width="1"/></pattern>
+    <clipPath id="bounds"><rect width="1280" height="488" rx="20"/></clipPath>
+  </defs>
+  <g clip-path="url(#bounds)">
+    <rect width="1280" height="488" fill="#f6f8fb"/>
+    <rect x="688" width="592" height="488" fill="url(#grid)"/>
+    <path d="M654 64V424" stroke="#dce4ed"/>
+    <g stroke="#087f70" stroke-width="1.8">
+      <circle cx="82" cy="78" r="17"/>
+      <ellipse cx="82" cy="78" rx="7" ry="17"/>
+      <path d="M65 78H99M68 69H96M68 87H96"/>
+    </g>
+    <g font-family="Arial, Helvetica, sans-serif">
+      <text x="114" y="83" font-size="15" font-weight="700" letter-spacing="2.2" fill="#53657b">CPA / OPEN SOURCE</text>
+      <text x="60" y="198" font-size="88" font-weight="700" letter-spacing="-4" fill="#142438">Egress</text>
+      <text x="60" y="287" font-size="88" font-weight="700" letter-spacing="-4" fill="#142438">Timezone<tspan fill="#087f70">.</tspan></text>
+      <text x="66" y="335" font-size="24" letter-spacing="-.35" fill="#53657b">A timezone that follows your route.</text>
+    </g>
+    <g font-family="'Courier New', monospace" font-size="13" font-weight="700" letter-spacing="1">
+      <rect x="64" y="389" width="160" height="34" rx="6" fill="#e0f2ec"/>
+      <text x="81" y="411" fill="#087f70">CODEX / OPENAI</text>
+      <text x="244" y="411" fill="#53657b">LINUX AMD64 + ARM64</text>
+      <text x="746" y="78" font-size="12" fill="#53657b">OBSERVE / RESOLVE / ALIGN</text>
+    </g>
+    <g stroke="#dce4ed" stroke-width="1.2">
+      <circle cx="960" cy="195" r="122"/>
+      <ellipse cx="960" cy="195" rx="46" ry="122"/>
+      <ellipse cx="960" cy="195" rx="91" ry="122"/>
+      <ellipse cx="960" cy="195" rx="122" ry="43"/>
+      <ellipse cx="960" cy="195" rx="122" ry="88"/>
+      <path d="M838 195H1082"/>
+    </g>
+    <ellipse cx="960" cy="202" rx="239" ry="79" transform="rotate(-24 960 202)" stroke="#adc5ca" stroke-width="1.5" stroke-dasharray="4 7"/>
+    <path d="M746 266C724 249 751 203 807 168" stroke="#087f70" stroke-width="3" stroke-linecap="round"/>
+    <path d="M796 167L808 167L804 179" stroke="#087f70" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="746" cy="266" r="13" fill="#e0f2ec"/>
+    <circle cx="746" cy="266" r="5" fill="#087f70"/>
+    <circle cx="1168" cy="138" r="5" fill="#087f70"/>
+    <circle cx="960" cy="195" r="77" fill="#f6f8fb" stroke="#dce4ed" stroke-width="1.5"/>
+    <g stroke="#53657b" stroke-width="2" stroke-linecap="round"><line x1="960.00" y1="134.00" x2="960.00" y2="129.00"/><line x1="990.50" y1="142.17" x2="993.00" y2="137.84"/><line x1="1012.83" y1="164.50" x2="1017.16" y2="162.00"/><line x1="1021.00" y1="195.00" x2="1026.00" y2="195.00"/><line x1="1012.83" y1="225.50" x2="1017.16" y2="228.00"/><line x1="990.50" y1="247.83" x2="993.00" y2="252.16"/><line x1="960.00" y1="256.00" x2="960.00" y2="261.00"/><line x1="929.50" y1="247.83" x2="927.00" y2="252.16"/><line x1="907.17" y1="225.50" x2="902.84" y2="228.00"/><line x1="899.00" y1="195.00" x2="894.00" y2="195.00"/><line x1="907.17" y1="164.50" x2="902.84" y2="162.00"/><line x1="929.50" y1="142.17" x2="927.00" y2="137.84"/></g>
+    <path d="M960 147V195L991 214" stroke="#087f70" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="960" cy="195" r="5" fill="#087f70"/>
+    <path d="M960 286V323" stroke="#087f70" stroke-width="1.5" stroke-dasharray="3 5"/>
+    <rect x="744" y="328" width="464" height="98" rx="12" fill="#ffffff" stroke="#dce4ed"/>
+    <text x="768" y="358" font-family="'Courier New', monospace" font-size="12" font-weight="700" letter-spacing="1.5" fill="#53657b">RESOLVED TIMEZONE</text>
+    <text x="768" y="394" font-family="'Courier New', monospace" font-size="24" font-weight="700" letter-spacing="-.6" fill="#142438">America/Los_Angeles</text>
+    <circle cx="1178" cy="354" r="4" fill="#087f70"/>
+    <text x="1206" y="457" text-anchor="end" font-family="'Courier New', monospace" font-size="10" letter-spacing="1.1" fill="#53657b">ILLUSTRATIVE ROUTE</text>
+  </g>
+</svg>
