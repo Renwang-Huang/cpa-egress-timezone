@@ -1,0 +1,62 @@
+name: Release
+on:
+  push:
+    tags: ["v[0-9]*"]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go test -race -count=1 ./...
+      - run: go vet ./...
+      - if: matrix.arch == 'arm64'
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Build Linux shared library
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          if [ "$TARGET_ARCH" = arm64 ]; then
+            export CC=aarch64-linux-gnu-gcc
+          fi
+          GOOS=linux GOARCH="$TARGET_ARCH" bash scripts/build.sh
+      - if: matrix.arch == 'amd64'
+        name: Verify binary in CPA
+        run: python3 scripts/integration.py
+      - name: Package
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/package.py --arch "$TARGET_ARCH" --version "$RELEASE_TAG"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.arch }}
+          path: dist/*.zip
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Create checksum list
+        working-directory: dist
+        run: sha256sum *.zip > checksums.txt
+      - name: Create draft release for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" dist/*.zip dist/checksums.txt --verify-tag --draft --title "$RELEASE_TAG" --notes-file docs/RELEASE_NOTES.md

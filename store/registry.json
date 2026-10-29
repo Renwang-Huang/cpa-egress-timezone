@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "plugins": [
+    {
+      "id": "egress-timezone",
+      "name": "Egress Timezone",
+      "description": "Adapt Codex/OpenAI client timezone declarations to the selected credential's observed egress IP, with bounded caching and a fixed-timezone mode.",
+      "author": "Renwang-Huang",
+      "repository": "https://github.com/Renwang-Huang/cpa-egress-timezone",
+      "homepage": "https://github.com/Renwang-Huang/cpa-egress-timezone",
+      "license": "MIT",
+      "tags": ["Codex", "OpenAI", "Timezone", "Request"]
+    }
+  ]
+}

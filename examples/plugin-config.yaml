@@ -1,0 +1,30 @@
+# Merge into the existing CPA configuration. Do not replace unrelated sections.
+plugins:
+  enabled: true
+  dir: plugins
+  configs:
+    egress-timezone:
+      enabled: true
+      priority: 1000
+      mode: auto
+      # Path as seen by CPA, inside its container if applicable.
+      cpa_config_path: /CLIProxyAPI/config.yaml
+      # Empty probes the selected upstream origin at /cdn-cgi/trace.
+      probe_url: ""
+      geoip_url: "https://ipwho.is/{ip}"
+      cache_ttl_seconds: 60
+      geoip_cache_ttl_seconds: 21600
+      retry_seconds: 10
+      lookup_timeout_ms: 4000
+      max_cached_routes: 128
+      # Empty: leave the original request unchanged on lookup failure.
+      fallback_timezone: ""
+      address_family: auto
+      allow_http: false
+
+# Optional fixed mode, which makes no probe or GeoIP requests:
+#     egress-timezone:
+#       enabled: true
+#       priority: 1000
+#       mode: fixed
+#       fixed_timezone: America/Los_Angeles

@@ -1,0 +1,28 @@
+name: Verify
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Check Go formatting
+        run: test -z "$(gofmt -l .)"
+      - run: go test -race -count=1 ./...
+      - run: go vet ./...
+      - run: bash scripts/build.sh
+      - name: Isolated CPA integration
+        run: python3 scripts/integration.py
+      - name: Verify store package
+        run: python3 scripts/package.py --arch amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: integration-evidence
+          path: build/integration-results.json

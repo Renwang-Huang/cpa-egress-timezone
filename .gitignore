@@ -1,0 +1,16 @@
+/.tools/
+/dist/
+/build/
+/stage/
+/artifacts/
+/private/
+__pycache__/
+*.so
+*.dylib
+*.dll
+*.h
+*.log
+*.env
+config.yaml
+auths/
+*-result.json
